@@ -27,18 +27,28 @@ public class CoffeeMachine {
     return scanner.nextInt();
   }
 
-  public static void main(String[] args) {
-    CoffeeMachine machine = new CoffeeMachine(400, 540, 120, 9, 550);
-    machine.display();
-    machine.performAction(machine.requestAction());
-    machine.display();
+  private static String inString(String request) {
+    if (request != null) {
+      System.out.printf("%s:%n", request);
+    }
+    return scanner.next();
   }
 
-  private void performAction(String action) {
-    switch (action) {
-      case "buy" -> buy();
-      case "fill" -> fill();
-      case "take" -> take();
+  public static void main(String[] args) {
+    CoffeeMachine machine = new CoffeeMachine(400, 540, 120, 9, 550);
+    machine.run();
+  }
+
+  private void run() {
+    boolean running = true;
+    while (running) {
+      switch (requestAction()) {
+        case "buy" -> buy();
+        case "fill" -> fill();
+        case "take" -> take();
+        case "remaining" -> display();
+        case "exit" -> running = false;
+      }
     }
   }
 
@@ -56,33 +66,52 @@ public class CoffeeMachine {
   }
 
   private void buy() {
-    int choice = inInt("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino");
+    String choice = inString(
+        "What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu");
     switch (choice) {
-      case 1 -> { // espresso
-        water -= 250;
-        coffee -= 16;
-        money += 4;
-      }
-      case 2 -> { // latte
-        water -= 350;
-        milk -= 75;
-        coffee -= 20;
-        money += 7;
-      }
-      case 3 -> { // cappuccino
-        water -= 200;
-        milk -= 100;
-        coffee -= 12;
-        money += 6;
+      case "1" -> makeCoffee(250, 0, 16, 1, 4); // espresso
+      case "2" -> makeCoffee(350, 75, 20, 1, 7); // latte
+      case "3" -> makeCoffee(200, 100, 12, 1, 6); // cappuccino
+      case "back" -> {
       }
     }
-    cups--;
     System.out.println();
   }
 
+  private void makeCoffee(int water, int milk, int coffee, int cups, int money) {
+    String resource = null;
+    boolean hasEnough = true;
+
+    if (this.water < water) {
+      resource = "water";
+      hasEnough = false;
+    } else if (this.milk < milk) {
+      resource = "milk";
+      hasEnough = false;
+    } else if (this.coffee < coffee) {
+      resource = "coffee";
+      hasEnough = false;
+    } else if (this.cups < cups) {
+      resource = "cups";
+      hasEnough = false;
+    }
+
+    if (hasEnough) {
+      System.out.println("I have enough resources, making you a coffee!");
+      this.water -= water;
+      this.milk -= milk;
+      this.coffee -= coffee;
+      this.money += money;
+      this.cups -= cups;
+    } else {
+      System.out.printf("Sorry, not enough %s%n!", resource);
+    }
+  }
+
   private String requestAction() {
-    System.out.println("Write action (buy, fill, take):");
-    return scanner.next();
+    String action = inString("Write action (buy, fill, take, remaining, exit)");
+    System.out.println();
+    return action;
   }
 
   private void display() {
