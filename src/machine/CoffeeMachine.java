@@ -4,16 +4,20 @@ import java.util.Scanner;
 
 public class CoffeeMachine {
 
-  private static final int ML_WATER_PER_CUP = 200;
-  private static final int ML_MILK_PER_CUP = 50;
-  private static final int G_COFFEE_PER_CUP = 15;
   private static final Scanner scanner = new Scanner(System.in);
 
-  private static int calculateMaxCups(int water, int milk, int coffee) {
-    int maxWater = water / ML_WATER_PER_CUP;
-    int maxMilk = milk / ML_MILK_PER_CUP;
-    int maxCoffee = coffee / G_COFFEE_PER_CUP;
-    return Math.min(Math.min(maxWater, maxMilk), maxCoffee);
+  private int water;
+  private int milk;
+  private int coffee;
+  private int cups;
+  private int money;
+
+  public CoffeeMachine(int water, int milk, int coffee, int cups, int money) {
+    this.water = water;
+    this.milk = milk;
+    this.coffee = coffee;
+    this.cups = cups;
+    this.money = money;
   }
 
   private static int inInt(String request) {
@@ -24,19 +28,70 @@ public class CoffeeMachine {
   }
 
   public static void main(String[] args) {
-    int water = inInt("Write how many ml of water the coffee machine has");
-    int milk = inInt("Write how many ml of milk the coffee machine has");
-    int coffee = inInt("Write how many grams of coffee beans the coffee machine has");
-    int numCups = inInt("Write how many cups of coffee you need");
+    CoffeeMachine machine = new CoffeeMachine(400, 540, 120, 9, 550);
+    machine.display();
+    machine.performAction(machine.requestAction());
+    machine.display();
+  }
 
-    int maxCups = calculateMaxCups(water, milk, coffee);
-    if (numCups == maxCups) {
-      System.out.println("Yes, I can make that amount of coffee");
-    } else if (numCups < maxCups) {
-      System.out.printf("Yes, I can make that amount of coffee (and even %d more than that)%n",
-          maxCups - numCups);
-    } else {
-      System.out.printf("No, I can make only %d cup(s) of coffee%n", maxCups);
+  private void performAction(String action) {
+    switch (action) {
+      case "buy" -> buy();
+      case "fill" -> fill();
+      case "take" -> take();
     }
+  }
+
+  private void take() {
+    System.out.printf("I gave you $%d%n%n", money);
+    money = 0;
+  }
+
+  private void fill() {
+    water += inInt("Write how many ml of water you want to add");
+    milk += inInt("Write how many ml of milk you want to add");
+    coffee += inInt("Write how many grams of coffee beans you want to add");
+    cups += inInt("Write how many disposable cups you want to add");
+    System.out.println();
+  }
+
+  private void buy() {
+    int choice = inInt("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino");
+    switch (choice) {
+      case 1 -> { // espresso
+        water -= 250;
+        coffee -= 16;
+        money += 4;
+      }
+      case 2 -> { // latte
+        water -= 350;
+        milk -= 75;
+        coffee -= 20;
+        money += 7;
+      }
+      case 3 -> { // cappuccino
+        water -= 200;
+        milk -= 100;
+        coffee -= 12;
+        money += 6;
+      }
+    }
+    cups--;
+    System.out.println();
+  }
+
+  private String requestAction() {
+    System.out.println("Write action (buy, fill, take):");
+    return scanner.next();
+  }
+
+  private void display() {
+    System.out.println("The coffee machine has:");
+    System.out.printf("%d ml of water%n", water);
+    System.out.printf("%d ml of milk%n", milk);
+    System.out.printf("%d g of coffee beans%n", coffee);
+    System.out.printf("%d disposable cups%n", cups);
+    System.out.printf("$%d of money%n", money);
+    System.out.println();
   }
 }
