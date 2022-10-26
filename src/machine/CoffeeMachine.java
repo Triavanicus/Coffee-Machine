@@ -13,10 +13,7 @@ public class CoffeeMachine {
     int maxWater = water / ML_WATER_PER_CUP;
     int maxMilk = milk / ML_MILK_PER_CUP;
     int maxCoffee = coffee / G_COFFEE_PER_CUP;
-    int max = maxWater;
-    max = maxMilk < max ? maxMilk : max;
-    max = maxCoffee < max ? maxCoffee : max;
-    return max;
+    return Math.min(Math.min(maxWater, maxMilk), maxCoffee);
   }
 
   private static int inInt(String request) {
