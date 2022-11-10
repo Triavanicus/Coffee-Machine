@@ -5,12 +5,14 @@ import java.util.Scanner;
 public class CoffeeMachine {
 
   private static final Scanner scanner = new Scanner(System.in);
-
   private int water;
   private int milk;
   private int coffee;
   private int cups;
   private int money;
+  private boolean needsInput;
+  private State state;
+  private FillState fillState;
 
   public CoffeeMachine(int water, int milk, int coffee, int cups, int money) {
     this.water = water;
@@ -18,36 +20,65 @@ public class CoffeeMachine {
     this.coffee = coffee;
     this.cups = cups;
     this.money = money;
+    this.needsInput = false;
+    this.state = State.MENU;
+    this.fillState = FillState.NONE;
   }
 
-  private static int inInt(String request) {
-    if (request != null) {
-      System.out.printf("%s:%n", request);
-    }
-    return scanner.nextInt();
-  }
-
-  private static String inString(String request) {
-    if (request != null) {
-      System.out.printf("%s:%n", request);
-    }
-    return scanner.next();
-  }
 
   public static void main(String[] args) {
     CoffeeMachine machine = new CoffeeMachine(400, 540, 120, 9, 550);
-    machine.run();
+    while (machine.run()) {
+      while (machine.isRequestingInput()) {
+        machine.input(scanner.nextLine());
+      }
+    }
   }
 
-  private void run() {
+
+  private boolean run() {
     boolean running = true;
-    while (running) {
-      switch (requestAction()) {
-        case "buy" -> buy();
-        case "fill" -> fill();
-        case "take" -> take();
-        case "remaining" -> display();
-        case "exit" -> running = false;
+    switch (state) {
+      case MENU -> showMenu();
+      case BUY -> showBuyMenu();
+      case FILL -> fill();
+      case TAKE -> take();
+      case REMAINING -> showRemaining();
+      case EXIT -> running = false;
+    }
+    return running;
+  }
+
+  private void showMenu() {
+    System.out.println("Write action (buy, fill, take, remaining, exit):");
+    needsInput = true;
+  }
+
+  private void showBuyMenu() {
+    System.out.println(
+        "What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:");
+    needsInput = true;
+  }
+
+  private void fill() {
+    switch (fillState) {
+      case NONE -> fillState = FillState.WATER;
+
+      case WATER -> {
+        System.out.println("Write how many ml of water you want to add:");
+        needsInput = true;
+      }
+      case MILK -> {
+        System.out.println("Write how many ml of milk you want to add:");
+        needsInput = true;
+      }
+      case COFFEE -> {
+        System.out.println("Write how many ml of coffee you want to add:");
+        needsInput = true;
+      }
+      case CUPS -> {
+        System.out.println("Write how many disposable cups you want to add:");
+        needsInput = true;
       }
     }
   }
@@ -55,27 +86,18 @@ public class CoffeeMachine {
   private void take() {
     System.out.printf("I gave you $%d%n%n", money);
     money = 0;
+    state = State.MENU;
   }
 
-  private void fill() {
-    water += inInt("Write how many ml of water you want to add");
-    milk += inInt("Write how many ml of milk you want to add");
-    coffee += inInt("Write how many grams of coffee beans you want to add");
-    cups += inInt("Write how many disposable cups you want to add");
+  private void showRemaining() {
+    System.out.println("The coffee machine has:");
+    System.out.printf("%d ml of water%n", water);
+    System.out.printf("%d ml of milk%n", milk);
+    System.out.printf("%d g of coffee beans%n", coffee);
+    System.out.printf("%d disposable cups%n", cups);
+    System.out.printf("$%d of money%n", money);
     System.out.println();
-  }
-
-  private void buy() {
-    String choice = inString(
-        "What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu");
-    switch (choice) {
-      case "1" -> makeCoffee(250, 0, 16, 1, 4); // espresso
-      case "2" -> makeCoffee(350, 75, 20, 1, 7); // latte
-      case "3" -> makeCoffee(200, 100, 12, 1, 6); // cappuccino
-      case "back" -> {
-      }
-    }
-    System.out.println();
+    state = State.MENU;
   }
 
   private void makeCoffee(int water, int milk, int coffee, int cups, int money) {
@@ -104,23 +126,73 @@ public class CoffeeMachine {
       this.money += money;
       this.cups -= cups;
     } else {
-      System.out.printf("Sorry, not enough %s%n!", resource);
+      System.out.printf("Sorry, not enough %s!%n", resource);
     }
   }
 
-  private String requestAction() {
-    String action = inString("Write action (buy, fill, take, remaining, exit)");
-    System.out.println();
-    return action;
+  private boolean isRequestingInput() {
+    return needsInput;
   }
 
-  private void display() {
-    System.out.println("The coffee machine has:");
-    System.out.printf("%d ml of water%n", water);
-    System.out.printf("%d ml of milk%n", milk);
-    System.out.printf("%d g of coffee beans%n", coffee);
-    System.out.printf("%d disposable cups%n", cups);
-    System.out.printf("$%d of money%n", money);
+  private void input(String in) {
+    switch (state) {
+      case MENU -> inputMenu(in);
+      case BUY -> inputBuy(in);
+      case FILL -> inputFill(in);
+    }
+  }
+
+  private void inputMenu(String option) {
+    state = switch (option) {
+      case "buy" -> State.BUY;
+      case "fill" -> State.FILL;
+      case "take" -> State.TAKE;
+      case "remaining" -> State.REMAINING;
+      case "exit" -> State.EXIT;
+      default -> State.MENU;
+    };
+    needsInput = false;
     System.out.println();
+  }
+
+  private void inputBuy(String in) {
+    switch (in) {
+      case "1" -> makeCoffee(250, 0, 16, 1, 4); // espresso
+      case "2" -> makeCoffee(350, 75, 20, 1, 7); // latte
+      case "3" -> makeCoffee(200, 100, 12, 1, 6); // cappuccino
+      case "back" -> {
+      }
+      default -> {
+        return;
+      }
+    }
+    needsInput = false;
+    state = State.MENU;
+    System.out.println();
+  }
+
+  private void inputFill(String in) {
+    int num = Integer.parseInt(in);
+    switch (fillState) {
+      case WATER -> {
+        water += num;
+        fillState = FillState.MILK;
+      }
+      case MILK -> {
+        milk += num;
+        fillState = FillState.COFFEE;
+      }
+      case COFFEE -> {
+        coffee += num;
+        fillState = FillState.CUPS;
+      }
+      case CUPS -> {
+        cups += num;
+        fillState = FillState.NONE;
+        state = State.MENU;
+        System.out.println();
+      }
+    }
+    needsInput = false;
   }
 }
